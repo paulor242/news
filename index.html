@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>News Salud España - The News API</title>
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#007bff" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#0056b3"
+    />
+    <link rel="apple-touch-icon" href="./icons/icon-192.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="NewsSaludES" />
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+  <body>
+    <header>
+      <h1>📰 News Salud en España</h1>
+      <p>Explora noticias de salud usando The News API</p>
+    </header>
+
+    <div class="container">
+      <section id="menu">
+        <h2>Menú de Consultas</h2>
+        <label>Buscar por:</label>
+        <select id="endpoint">
+          <option value="">seleccione una opcion</option>
+          <option value="headlines">1. Top Headlines Salud</option>
+          <option value="all">2. Todos Artículos Salud</option>
+          <option value="latest">3. Últimas Noticias Salud</option>
+          <option value="search">4. Búsqueda Salud</option>
+          <option value="world">5. Top Mundial Salud</option>
+          <option value="live">6. Live Keyword Salud</option>
+        </select>
+        <br />
+        <label>Búsqueda:</label>
+        <input type="text" id="query" placeholder="e.g. vacunación, covid" />
+        <br />
+        <label>Desde (YYYY-MM-DD):</label>
+        <input type="date" id="fromDate" />
+        <label>Hasta (YYYY-MM-DD):</label>
+        <input type="date" id="toDate" />
+        <br />
+        <button onclick="cargarNoticias()">🔍 Cargar Noticias</button>
+      </section>
+
+      <div id="error"></div>
+      <section id="results"></section>
+    </div>
+
+    <script>
+      // Register service worker
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then((reg) => console.log("SW registered", reg))
+            .catch((err) => console.log("SW registration failed", err));
+        });
+      }
+    </script>
+
+    <footer>
+      <h3>NewsSalud Espn salud. teh news api (thenewsapi.com)</h3>
+      <p>Paulo Rodriguez Mendez</p>
+      <p>26/03/2026</p>
+
+    </footer>
+    <script src="index.js"></script>
+
+  </body>
+</html>
