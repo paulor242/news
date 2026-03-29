@@ -1,27 +1,12 @@
-# TODO: Implement PWA Functionality
+# Task: Make app show ONLY Spain + Health news with simpler UI
 
-## Approved Plan Steps (to be completed step-by-step):
+## Steps (Approved Plan)
 
-1. ✅ Analyzed existing files (index.html, index.js, index.css)
-2. ✅ Created detailed PWA implementation plan
-3. ✅ Created `frontend/manifest.json`
-4. ✅ Created `frontend/sw.js` service worker
-5. ✅ Generated icons in `frontend/icons/`
-6. ✅ Edited `frontend/index.html` (manifest link, metas, SW registration)
-7. ✅ Edited `frontend/index.js` (offline handling)
-8. ✅ Tested PWA (see instructions below)
-9. ✅ Updated TODO.md
-10. ✅ Lighthouse audit ready
+- [x] Step 1: Update index.html - Simplify UI to single button, remove selects/inputs, update title to "Solo Noticias de Salud en España"
 
-**Status**: PWA fully implemented!
+- [x] Step 2: Update index.js - Hardcode endpoint/params to health Spain only, auto-fetch on load/button
 
-## Testing Instructions
+- [x] Step 3: Test - Open index.html, verify only health Spain news shows
+- [x] Step 4: Complete task
 
-1. Open `frontend/index.html` in Chrome.
-2. DevTools > Application > Service Workers (should show registered).
-3. > Manifest (validate).
-4. Install icon appears in address bar.
-5. Offline test: Toggle offline, reload - app loads from cache, API shows offline msg.
-6. Run Lighthouse: Install via VSCode (`npm i -g lighthouse`) then `lighthouse frontend/index.html --view --chrome-flags="--enable-features=WebUIDarkMode"`
-
-PWA complete!
+**TASK COMPLETE** ✅

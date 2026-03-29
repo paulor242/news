@@ -1,98 +1,169 @@
-// PWA Offline support
-function checkOnlineStatus() {
-  const errorDiv = document.getElementById("error");
-  if (!navigator.onLine) {
-    errorDiv.textContent = "Modo offline activado. Usando caché donde posible.";
-    errorDiv.style.display = "block";
-    return false;
-  }
-  return true;
-}
-
-window.addEventListener("online", () => location.reload());
-window.addEventListener("offline", () => {
-  checkOnlineStatus();
-});
 
 const API_KEY = "Wfnmj85wAfSOAytM3HkZGgySFpGnxV8VYHbVHfBm";
 const BASE_URL = "https://api.thenewsapi.com/v1";
 
+
 async function cargarNoticias() {
-  if (!checkOnlineStatus()) return;
+    
+    // --- 1. OBTENER VALORES DEL FORMULARIO ---
+    const endpoint = document.getElementById("endpoint").value;
+    const query = document.getElementById("query").value.trim();
+    const fromDate = document.getElementById("fromDate").value;
+    const toDate = document.getElementById("toDate").value;
+    const errorDiv = document.getElementById("error");
+    const resultsDiv = document.getElementById("results");
 
-  const endpoint = document.getElementById("endpoint").value;
-  const query = document.getElementById("query").value.trim();
-  const fromDate = document.getElementById("fromDate").value;
-  const toDate = document.getElementById("toDate").value;
-  const errorDiv = document.getElementById("error");
-  const resultsDiv = document.getElementById("results");
-  errorDiv.style.display = "none";
-  resultsDiv.innerHTML = "<p>Cargando...</p>";
-  try {
-    let url = `${BASE_URL}${getEndpointPath(endpoint)}`;
-    const params = new URLSearchParams({
-      api_token: API_KEY,
-      category: "health",
-      country: "es",
-      language: "es",
-    });
-    if (query) params.append("search", query);
-    if (fromDate) params.append("from_date", fromDate);
-    if (toDate) params.append("to_date", toDate);
-    url += `?${params.toString()}`;
-    // Petición Fetch con headers
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) {
-      throw new Error(
-        `Error HTTP: ${response.status} - ${response.statusText}`,
-      );
-    }
-    const data = await response.json();
 
-    if (!data.data || data.data.length === 0) {
-      throw new Error("No se encontraron noticias. Intenta otros parámetros.");
+    // --- 2. VALIDACIONES INICIALES ---
+    
+    // Verificar que el usuario haya seleccionado un tipo de consulta
+    if (!endpoint) {
+        errorDiv.textContent = "Selecciona un tipo de consulta.";
+        errorDiv.style.display = "block";
+        return; // Detener ejecución si no hay endpoint
     }
 
-    let html = "";
-    data.data.slice(0, 12).forEach((article) => {
-      const img = article.image_url
-        ? `<img src="${article.image_url}" alt="${article.title}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Imagen'">`
-        : '<div style="height:200px;background:#eee;display:flex;align-items:center;justify-content:center;color:#999;">Sin imagen</div>';
-      html += `
-              <div class="card">
-                  ${img}
-                  <div class="card-content">
-                      <h3>${article.title || "Sin título"}</h3>
-                      <p>${(article.description || "").substring(0, 150)}...</p>
-                      <p><strong>Fuente:</strong> ${article.source || "N/A"} | ${new Date(article.published_at).toLocaleDateString("es-ES")}</p>
-                      <a href="${article.link || "#"}" target="_blank">Leer más</a>
-                  </div>
-              </div>
-          `;
-    });
-    resultsDiv.innerHTML = html;
-  } catch (error) {
-    console.error("Error:", error);
-    errorDiv.textContent = `Error: ${error.message}. Verifica conexión/API key/params.`;
-    errorDiv.style.display = "block";
-    resultsDiv.innerHTML = "";
-  }
-}
+    // Ocultar mensaje de error previo y mostrar indicador de carga
+    errorDiv.style.display = "none";
+    resultsDiv.innerHTML = "<p>Cargando noticias de salud en España...</p>";
 
-function getEndpointPath(endpoint) {
-  const paths = {
-    top: "/news/Health/top",
-    all: "/news/all",
-    latest: "/news/latest",
-    search: "/news/search",
-    world: "/top/world",
-    live: "/keyword/health/news/live",
-  };
-  return paths[endpoint] || "/news/top";
+    // Verificar conexión a internet del navegador
+    if (!navigator.onLine) {
+        errorDiv.textContent = "No tienes conexión a internet.";
+        errorDiv.style.display = "block";
+        return;
+    }
+
+
+    // --- 3. CONSTRUCCIÓN DE LA PETICIÓN ---
+    
+    try {
+        const params = new URLSearchParams({
+            api_token: API_KEY,      
+            categories: "health",       
+            countries: "es",          
+            language: "es",            
+        });
+
+        // Añadir parámetros opcionales solo si el usuario los proporcionó
+        if (query) params.append("search", query);           
+        if (fromDate) params.append("published_after", fromDate);  
+        if (toDate) params.append("published_before", toDate);       
+
+        
+        // --- 4. SELECCIÓN DEL ENDPOINT ---
+        
+        let url = ""; 
+
+        // Estructura switch para determinar qué endpoint de la API usar
+        switch (endpoint) {
+            
+            case "headlines":
+                url = `${BASE_URL}/news/top?${params.toString()}`;
+                break;
+
+            case "all":
+                url = `${BASE_URL}/news/all?${params.toString()}`;
+                break;
+
+            case "latest":
+                url = `${BASE_URL}/news/latest?${params.toString()}`;
+                break;
+
+            case "search":
+                if (!query) {
+                    throw new Error("Debes escribir algo en búsqueda.");
+                }
+                url = `${BASE_URL}/news/all?${params.toString()}`;
+                break;
+
+            case "world":
+                url = `${BASE_URL}/news/top?${params.toString()}`;
+                break;
+
+            case "live":
+                // Noticias en tiempo real (requiere palabra clave)
+                if (!query) {
+                    throw new Error("Debes escribir una palabra clave.");
+                }
+                url = `${BASE_URL}/news/live?${params.toString()}`;
+                break;
+
+            default:
+                // Manejar caso de endpoint no reconocido
+                throw new Error("Endpoint no válido.");
+        }
+
+
+        // --- 5. PETICIÓN A LA API ---
+        
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || `Error HTTP ${response.status}`);
+        }
+
+        // Convertir la respuesta JSON a objeto JavaScript
+        const data = await response.json();
+
+        // Verificar que existan resultados
+        if (!data.data || data.data.length === 0) {
+            throw new Error("No se encontraron noticias.");
+        }
+
+
+        // --- 6. GENERACIÓN DEL HTML DE RESULTADOS ---
+        
+        let html = ""; 
+
+        data.data.forEach(article => {
+            
+            // Imagen por defecto si la noticia no tiene imagen o falla al cargar
+            const fallbackImg = "https://via.placeholder.com/300x200?text=Salud+España";
+
+            const img = article.image_url
+                ? `<img src="${article.image_url}" onerror="this.src='${fallbackImg}'">`
+                : `<div class="no-img">Sin imagen</div>`;
+
+            // Construir la tarjeta (card) de la noticia
+            html += `
+                <div class="card">
+                    ${img}
+                    <div class="card-content">
+                        <!-- Título de la noticia o mensaje por defecto -->
+                        <h3>${article.title || "Sin título"}</h3>
+                        
+                        <!-- Descripción truncada a 120 caracteres -->
+                        <p>${(article.description || "Sin descripción").substring(0, 120)}...</p>
+                        
+                        <!-- Metadatos: fuente y fecha de publicación -->
+                        <small>
+                            ${article.source || "Fuente desconocida"} | 
+                            ${new Date(article.published_at).toLocaleDateString()}
+                        </small>
+                        <br>
+                        
+                        <!-- Enlace para leer la noticia completa (abre en nueva pestaña) -->
+                        <a href="${article.url}" target="_blank">Leer más</a>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Insertar el HTML generado en el contenedor de resultados
+        resultsDiv.innerHTML = html;
+
+
+    // --- 7. MANEJO DE ERRORES ---
+    
+    } catch (error) {
+
+        console.error(error);
+
+        errorDiv.textContent = error.message;
+        errorDiv.style.display = "block";
+
+        resultsDiv.innerHTML = "";
+    }
 }
